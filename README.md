@@ -9,9 +9,9 @@
 1. Create .env (or .env.local) file in root directory: 
   `touch .env`
 2. Set the following variables inside with your own values:
-  DB_DSN=postgres://$USERNAME:$PASSWORD@localhost/$DB_NAME?sslmode=disable
-  JWT_KEY=super_duper_key
-  JWT_EXPIRY_HOURS=8
+  * `DB_DSN=postgres://$USERNAME:$PASSWORD@localhost/$DB_NAME?sslmode=disable`
+  * `JWT_KEY=super_duper_key`
+  * `JWT_EXPIRY_HOURS=8`
 
 ### How to run:
 `go run ./cmd/api`
