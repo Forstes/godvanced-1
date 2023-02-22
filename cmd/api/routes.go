@@ -34,5 +34,5 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodPost, "/v1/activities", app.verifyJWTMiddleware(http.HandlerFunc(app.createActivityHandler)))
 	router.Handler(http.MethodPut, "/v1/activities/:id", app.verifyJWTMiddleware(http.HandlerFunc(app.updateActivityHandler)))
 
-	return app.recoverPanic(router)
+	return app.recoverPanic(app.rateLimit(router))
 }
