@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"net/http"
-	"strconv"
 
 	"godvanced.forstes.github.com/internal/data"
 	"godvanced.forstes.github.com/internal/validator"
@@ -22,12 +21,7 @@ func (app *application) createActivityHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	userIdClaim := claims["user"].(string)
-	userId, err := strconv.ParseInt(userIdClaim, 10, 64)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
-	}
+	userID := int64(claims["user"].(float64))
 
 	var input struct {
 		Name         string  `json:"name"`
@@ -48,7 +42,7 @@ func (app *application) createActivityHandler(w http.ResponseWriter, r *http.Req
 		AnswersSum:   input.AnswersSum,
 		Status:       input.Status,
 	}
-	activity.UserID = userId
+	activity.UserID = userID
 	if activity.AnswerPoints == nil {
 		activity.AnswerPoints = make([]int16, 0)
 	}
@@ -86,18 +80,8 @@ func (app *application) updateActivityHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	userIdClaim := claims["user"].(string)
-	userId, err := strconv.ParseInt(userIdClaim, 10, 64)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-	}
-
-	role := claims["role"].(string)
-	roleInt, err := strconv.Atoi(role)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
-	}
+	userID := int64(claims["user"].(float64))
+	roleInt := int8(claims["role"].(float64))
 
 	// Getting Activity
 	id, err := app.readIDParam(r)
@@ -118,7 +102,7 @@ func (app *application) updateActivityHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	// User can't edit not his own activities, admin can edit anyway
-	if activity.UserID != userId && roleInt != data.AdminRole {
+	if activity.UserID != userID && roleInt != data.AdminRole {
 		app.forbiddenResponse(w, r, err)
 		return
 	}
@@ -180,12 +164,7 @@ func (app *application) listActivitiesHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	userIdClaim := claims["user"].(string)
-	userID, err := strconv.ParseInt(userIdClaim, 10, 64)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
-	}
+	userID := int64(claims["user"].(float64))
 
 	v := validator.New()
 	app.getUserActivities(userID, v, w, r)
@@ -200,6 +179,7 @@ func (app *application) listUserActivitiesHandler(w http.ResponseWriter, r *http
 }
 
 func (app *application) getUserActivities(userId int64, v *validator.Validator, w http.ResponseWriter, r *http.Request) {
+
 	var input struct {
 		UserID int64
 		data.Filters

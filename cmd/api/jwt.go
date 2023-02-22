@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -105,12 +104,7 @@ func (app *application) JWTAdminOnlyMiddleware(next http.Handler) http.HandlerFu
 			return
 		}
 
-		role := claims["role"].(string)
-		roleInt, err := strconv.Atoi(role)
-		if err != nil {
-			app.serverErrorResponse(w, r, err)
-			return
-		}
+		roleInt := int8(claims["role"].(float64))
 
 		if roleInt != data.AdminRole {
 			app.forbiddenResponse(w, r, err)
