@@ -141,7 +141,12 @@ func (app *application) updateActivityHandler(w http.ResponseWriter, r *http.Req
 
 	err = app.models.Activities.UpdateActivity(activity)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		switch {
+		case errors.Is(err, data.ErrEditConflict):
+			app.editConflictResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
 		return
 	}
 

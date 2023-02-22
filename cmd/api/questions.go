@@ -124,7 +124,12 @@ func (app *application) updateQuestionHandler(w http.ResponseWriter, r *http.Req
 
 	err = app.models.Questions.UpdateQuestion(question)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		switch {
+		case errors.Is(err, data.ErrEditConflict):
+			app.editConflictResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
 		return
 	}
 

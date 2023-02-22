@@ -102,13 +102,14 @@ func (m UserModel) UpdateUser(user *User) error {
 
 	result, err := m.DB.Exec(ctx, query, args...)
 	if err != nil {
-		return err
+		switch {
+		case result.RowsAffected() == 0:
+			return ErrEditConflict
+		default:
+			return err
+		}
 	}
 
-	rowsAffected := result.RowsAffected()
-	if rowsAffected == 0 {
-		return ErrRecordNotFound
-	}
 	return nil
 }
 
