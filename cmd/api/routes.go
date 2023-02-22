@@ -6,7 +6,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-func (app *application) routes() *httprouter.Router {
+func (app *application) routes() http.Handler {
 	router := httprouter.New()
 
 	router.NotFound = http.HandlerFunc(app.notFoundResponse)
@@ -34,5 +34,5 @@ func (app *application) routes() *httprouter.Router {
 	router.Handler(http.MethodPost, "/v1/activities", app.verifyJWTMiddleware(http.HandlerFunc(app.createActivityHandler)))
 	router.Handler(http.MethodPut, "/v1/activities/:id", app.verifyJWTMiddleware(http.HandlerFunc(app.updateActivityHandler)))
 
-	return router
+	return app.recoverPanic(router)
 }
