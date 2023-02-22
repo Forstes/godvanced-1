@@ -7,9 +7,13 @@ require (
 	github.com/julienschmidt/httprouter v1.3.0
 )
 
-require golang.org/x/time v0.3.0 // indirect
+require (
+	golang.org/x/time v0.3.0 // indirect
+	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
+)
 
 require (
+	github.com/go-mail/mail/v2 v2.3.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect

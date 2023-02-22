@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
 	"godvanced.forstes.github.com/internal/data"
 	"godvanced.forstes.github.com/internal/validator"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func (app *application) listUserIkigaisHandler(w http.ResponseWriter, r *http.Request) {
@@ -80,6 +80,13 @@ func (app *application) register(w http.ResponseWriter, r *http.Request) {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
+
+	app.background(func() {
+		err = app.mailer.Send(user.Email, "user_welcome.tmpl", user)
+		if err != nil {
+			app.logger.PrintError(err, nil)
+		}
+	})
 
 	token, err := app.generateJWT(user)
 	if err != nil {
