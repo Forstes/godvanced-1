@@ -54,6 +54,7 @@ func (m ActivityModel) GetActivity(id int64) (*Activity, error) {
 
 	err := m.DB.QueryRow(ctx, query, id).Scan(
 		&activity.UserID,
+		&activity.Name,
 		&activity.AnswerPoints,
 		&activity.AnswersSum,
 		&activity.Status,
@@ -130,12 +131,12 @@ func (m ActivityModel) InsertActivity(activity *Activity) error {
 
 func (m ActivityModel) UpdateActivity(activity *Activity) error {
 	query :=
-		`UPDATE questions
-		SET user_id = $1, name = $2, answer_points = $3, answers_sum = $4, status = $5
-		WHERE id = $6`
+		`UPDATE activities
+		SET name = $1, answer_points = $2, answers_sum = $3, status = $4
+		WHERE id = $5`
 
 	args := []any{
-		activity.UserID, activity.Name, activity.AnswerPoints, activity.AnswersSum, activity.Status, activity.ID,
+		activity.Name, activity.AnswerPoints, activity.AnswersSum, activity.Status, activity.ID,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -143,13 +144,12 @@ func (m ActivityModel) UpdateActivity(activity *Activity) error {
 
 	result, err := m.DB.Exec(ctx, query, args...)
 	if err != nil {
-		switch {
-		case result.RowsAffected() == 0:
-			return ErrEditConflict
-		default:
-			return err
-		}
+		return err
 	}
 
+	rowsAffected := result.RowsAffected()
+	if rowsAffected == 0 {
+		return ErrRecordNotFound
+	}
 	return nil
 }

@@ -110,7 +110,6 @@ func (app *application) updateActivityHandler(w http.ResponseWriter, r *http.Req
 	var input struct {
 		Name         *string `json:"name"`
 		AnswerPoints []int16 `json:"answer_points"`
-		AnswersSum   *int16  `json:"answers_sum"`
 		Status       *int16  `json:"status"`
 	}
 
@@ -120,14 +119,14 @@ func (app *application) updateActivityHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	activity.ID = id
+
 	if input.Name != nil {
 		activity.Name = *input.Name
 	}
 	if input.AnswerPoints != nil {
 		activity.AnswerPoints = input.AnswerPoints
-	}
-	if input.AnswersSum != nil {
-		activity.AnswersSum = *input.AnswersSum
+		app.EvaluateActivity(activity)
 	}
 	if input.Status != nil {
 		activity.Status = *input.Status
@@ -141,12 +140,7 @@ func (app *application) updateActivityHandler(w http.ResponseWriter, r *http.Req
 
 	err = app.models.Activities.UpdateActivity(activity)
 	if err != nil {
-		switch {
-		case errors.Is(err, data.ErrEditConflict):
-			app.editConflictResponse(w, r)
-		default:
-			app.serverErrorResponse(w, r, err)
-		}
+		app.serverErrorResponse(w, r, err)
 		return
 	}
 
@@ -180,6 +174,7 @@ func (app *application) listUserActivitiesHandler(w http.ResponseWriter, r *http
 	qs := r.URL.Query()
 
 	userID := app.readInt64(qs, "user_id", 1, v)
+
 	app.getUserActivities(userID, v, w, r)
 }
 
