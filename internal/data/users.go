@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"time"
@@ -12,12 +13,13 @@ import (
 )
 
 type User struct {
-	ID        int       `json:"id"`
+	ID        int64     `json:"id"`
 	Role      int       `json:"-"`
 	Email     string    `json:"email"`
 	Name      string    `json:"name"`
 	Password  string    `json:"-"`
 	CreatedAt time.Time `json:"-"`
+	Activated bool      `json:"-"`
 }
 
 type UserIkigai struct {
@@ -55,7 +57,7 @@ func (m UserModel) InsertUser(user *User) error {
 
 func (m UserModel) GetUser(email string) (*User, error) {
 	query := `
-		SELECT id, role, email, name, password, created_at
+		SELECT id, role, email, name, password, created_at, activated
 		FROM users
 		WHERE email = $1`
 
@@ -71,6 +73,7 @@ func (m UserModel) GetUser(email string) (*User, error) {
 		&user.Name,
 		&user.Password,
 		&user.CreatedAt,
+		&user.Activated,
 	)
 
 	if err != nil {
@@ -87,13 +90,14 @@ func (m UserModel) GetUser(email string) (*User, error) {
 func (m UserModel) UpdateUser(user *User) error {
 	query := `
 		UPDATE users
-		SET email = $1, name = $2, password = $3
-		WHERE id = $4`
+		SET email = $1, name = $2, password = $3, activated = $4
+		WHERE id = $5`
 
 	args := []any{
 		user.Email,
 		user.Name,
 		user.Password,
+		user.Activated,
 		user.ID,
 	}
 
@@ -156,4 +160,44 @@ func (m UserModel) GetUserIkigais(searchEmail string, filters Filters) ([]*UserI
 
 	metadata := calculateMetadata(totalRecords, filters.Page, filters.PageSize)
 	return ikigais, metadata, nil
+}
+
+func (m UserModel) GetForToken(tokenScope, tokenPlaintext string) (*User, error) {
+	tokenHash := sha256.Sum256([]byte(tokenPlaintext))
+
+	query := `
+		SELECT users.id, users.role, users.email, users.name, users.password, users.created_at, users.activated
+		FROM users
+		INNER JOIN tokens
+		ON users.id = tokens.user_id
+		WHERE tokens.hash = $1
+		AND tokens.scope = $2
+		AND tokens.expiry > $3`
+
+	args := []any{tokenHash[:], tokenScope, time.Now()}
+
+	var user User
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRow(ctx, query, args...).Scan(
+		&user.ID,
+		&user.Role,
+		&user.Email,
+		&user.Name,
+		&user.Password,
+		&user.CreatedAt,
+		&user.Activated,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &user, nil
 }

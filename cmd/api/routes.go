@@ -18,6 +18,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/v1/register", app.register)
 	router.HandlerFunc(http.MethodPost, "/v1/login", app.login)
 	router.HandlerFunc(http.MethodGet, "/v1/logout", app.logout)
+	router.HandlerFunc(http.MethodPut, "/v1/user/activated", app.activateUserHandler)
 
 	router.HandlerFunc(http.MethodGet, "/v1/questions", app.listQuestionsHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/questions", app.createQuestionHandler)

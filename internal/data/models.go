@@ -14,6 +14,7 @@ var (
 
 type Models struct {
 	Users      UserModel
+	Tokens     TokenModel
 	Activities ActivityModel
 	Questions  QuestionModel
 	Answers    AnswerModel
@@ -22,6 +23,7 @@ type Models struct {
 func NewModels(db *pgxpool.Pool) Models {
 	return Models{
 		Users:      UserModel{DB: db},
+		Tokens:     TokenModel{DB: db},
 		Activities: ActivityModel{DB: db},
 		Questions:  QuestionModel{DB: db},
 		Answers:    AnswerModel{DB: db},
